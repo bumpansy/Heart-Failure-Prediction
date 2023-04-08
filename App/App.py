@@ -6,7 +6,7 @@ from EDA.EDA import *
 st.set_page_config(layout='wide')
 
 url = 'https://raw.githubusercontent.com/bumpansy/Heart-Failure-Prediction/main/Model/heart.csv'
-df = pd.read_csv(url,index_col=1)
+df = pd.read_csv(url)
 #model = pickle.load(open('Model\model.pkl', 'rb'))
 
 st.header('Heart Failure Prediction App')
@@ -20,6 +20,10 @@ with tab1:
     st.write('Number of Rows: 303')
     st.write('Number of Columns: 14')
     st.dataframe(df)
-    col1,col2 = st.columns()
+    col1,col2 = st.columns(2)
     with col1:
-        st.plotly_chart(sex_hist)
+        fig = go.Figure(px.histogram(df, x = 'sex', color = 'sex'))
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        fig = px.density_heatmap(df)
+        st.plotly_chart(fig, x = '' ,use_container_width=True)
