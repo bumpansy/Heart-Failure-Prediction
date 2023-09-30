@@ -4,14 +4,18 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 #from EDA.EDA import *
+from Scripts.feat_cols import *
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 #model = load_model('E:\Public Repositories\Heart-Failure-Prediction\Model\my_model.h5')
 
-model = tf.keras.saving.load_model(
-    'E:\Public Repositories\Heart-Failure-Prediction\Model\my_model.tf', custom_objects=None, compile=True, safe_mode=True
-)
+@st.cache_resource
+def load_model():
+    model = tf.keras.saving.load_model(
+        'Model\my_model.tf', custom_objects=None, compile=True, safe_mode=True
+    )
+    return model
 
 st.set_page_config(layout='wide')
 
@@ -35,7 +39,7 @@ def user_input_features():
         exa = st.selectbox('Exercise induced angina: ',(0,1))
         old = st.number_input('oldpeak ')
         slope = st.number_input('he slope of the peak exercise ST segmen: ')
-        ca = st.selectbox('number of major vessels',(0,1,2,3))
+        caa = float(st.selectbox('number of major vessels',(0,1,2,3)))
         thal = st.selectbox('thal',(0,1,2))
 
     data = {'age': age,
@@ -49,7 +53,7 @@ def user_input_features():
             'exang':exa,
             'oldpeak':old,
             'slope':slope,
-            'ca':ca,
+            'caa':caa,
             'thal':thal
                 }
     features = pd.DataFrame(data, index=[0])
@@ -80,13 +84,22 @@ with tab1:
 
 with tab2:
     st.subheader('Model Info')
+    model = load_model()
 
 with tab3:
     st.subheader('Heart Failure Prediction')
+    model = load_model()
     with st.form('Vitals Input'):
         st.write('Enter the correct details for the given inout fields.')
         input_df = user_input_features()
         submit = st.form_submit_button('Predict')
     if submit:
         st.dataframe(input_df)
-        prediction = model.predict()
+        df = pd.concat([input_df,df],axis=0)
+        df = df[:1]
+        feat_cols = make_feat_cols()
+        
+        test_input_function = df_to_dataset(df)
+        #input = input_df.to_numpy()
+        prediction = model.predict(test_input_function)
+        st.write(prediction)
